@@ -12,9 +12,10 @@ After this, the project will be running on your localhost.
 Typically at http://localhost:3000/
 
 # Here is How Output will Show to You
-![Alt text](meta1.png)
+![Alt text](Screenshot.png)
 
-![Alt text](meta2.png)
+ If you try to enter value Zero or less than zero then error message will prompt
+![Alt text](Screenshot1.png)
 
 
 ## Functionality:
