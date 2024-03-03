@@ -14,7 +14,8 @@ Typically at http://localhost:3000/
 # Here is How Output will Show to You
 ![Alt text](Screenshot.png)
 
- If you try to enter value Zero or less than zero then error message will prompt
+ If you try to enter value Zero or less than zero then an error message will prompt
+ 
 ![Alt text](Screenshot1.png)
 
 
