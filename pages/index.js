@@ -42,7 +42,7 @@ export default function HomePage() {
     const accounts = await ethWallet.request({ method: "eth_requestAccounts" });
     handleAccount(accounts);
 
-    // once the wallet is set we can get a reference to our deployed contract
+    // Once the wallet is set, we can get a reference to our deployed contract
     getATMContract();
   };
 
@@ -56,25 +56,85 @@ export default function HomePage() {
 
   const getBalance = async () => {
     if (atm) {
-      setBalance((await atm.getBalance()).toNumber());
+      const balanceValue = await atm.getBalance();
+      if (balanceValue !== undefined) {
+        setBalance(ethers.utils.formatUnits(balanceValue, "wei"));
+      }
+    }
+  };
+
+  const transfer = async (recipient, amount) => {
+    try {
+      if (atm) {
+        // Check for valid address
+        if (!ethers.utils.isAddress(recipient)) {
+          throw new Error("Invalid recipient address");
+        }
+
+        // Check if sender and recipient are the same
+        if (account === recipient) {
+          throw new Error("Sender and recipient cannot be the same");
+        }
+
+        // Validate sufficient funds
+        const senderBalance = await atm.getBalance();
+        if (senderBalance < ethers.utils.parseEther(amount)) {
+          throw new Error("Insufficient balance for transfer");
+        }
+
+        // Perform transaction
+        let tx = await atm.transfer(recipient, {
+          value: ethers.utils.parseEther(amount)
+        });
+        await tx.wait();
+        getBalance();
+        updateTransactions(`Transferred ${amount} ETH to ${recipient}`);
+        console.log("Transfer successful");
+        alert("Transfer successful");
+      }
+    } catch (error) {
+      console.error("Transfer error:", error.message);
+      alert(`Transfer failed: ${error.message}`);
     }
   };
 
   const deposit = async () => {
-    if (atm) {
-      let tx = await atm.deposit(transactionAmount);
-      await tx.wait();
-      getBalance();
-      updateTransactions(`Deposited ${transactionAmount} ETH`);
+    try {
+      if (atm) {
+        // Check if the deposit amount is valid
+        if (transactionAmount <= 0) {
+          throw new Error("Enter a valid deposit amount");
+        }
+
+        // Perform transaction
+        let tx = await atm.deposit({
+          value: ethers.utils.parseEther(transactionAmount.toString())
+        });
+        await tx.wait();
+        getBalance();
+        updateTransactions(`Deposited ${transactionAmount} ETH`);
+        console.log("Deposit successful");
+        alert("Deposit successful");
+      }
+    } catch (error) {
+      console.error("Deposit error:", error.message);
+      alert(`Deposit failed: ${error.message}`);
     }
   };
 
   const withdraw = async () => {
-    if (atm) {
-      let tx = await atm.withdraw(transactionAmount);
-      await tx.wait();
-      getBalance();
-      updateTransactions(`Withdrawn ${transactionAmount} ETH`);
+    try {
+      if (atm) {
+        let tx = await atm.withdraw(transactionAmount);
+        await tx.wait();
+        getBalance();
+        updateTransactions(`Withdrawn ${transactionAmount} ETH`);
+        console.log("Withdrawal successful");
+        alert("Withdrawal successful");
+      }
+    } catch (error) {
+      console.error("Withdrawal error:", error.message);
+      alert(`Withdrawal failed: ${error.message}`);
     }
   };
 
@@ -85,7 +145,7 @@ export default function HomePage() {
   const initUser = () => {
     // Check to see if the user has Metamask
     if (!ethWallet) {
-      return <p>Please install Metamask in order to use this ATM.</p>;
+      return <p>Please install Metamask to use this ATM.</p>;
     }
 
     // Check to see if the user is connected. If not, connect to their account
@@ -114,6 +174,17 @@ export default function HomePage() {
           <button onClick={deposit}>Deposit</button>
           <button onClick={withdraw}>Withdraw</button>
         </div>
+        <h2>Transfer</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            transfer(e.target.recipient.value, e.target.amount.value);
+          }}
+        >
+          <input type="text" name="recipient" placeholder="Recipient Address" />
+          <input type="number" name="amount" placeholder="Amount" />
+          <button type="submit">Transfer</button>
+        </form>
         <h2>Recent Transactions</h2>
         <ul>
           {transactions.map((transaction, index) => (
@@ -137,6 +208,54 @@ export default function HomePage() {
       <style jsx>{`
         .container {
           text-align: center;
+          padding: 20px;
+        }
+
+        header {
+          background-color: #4caf50;
+          padding: 10px;
+          margin-bottom: 20px;
+        }
+
+        h1 {
+          color: white;
+        }
+
+        p {
+          font-size: 18px;
+        }
+
+        button {
+          background-color: #008CBA;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          margin: 5px;
+        }
+
+        input {
+          padding: 10px;
+          margin: 5px;
+          border-radius: 5px;
+          border: 1px solid #ccc;
+        }
+
+        form {
+          margin-top: 20px;
+        }
+
+        ul {
+          list-style-type: none;
+          padding: 0;
+        }
+
+        li {
+          background-color: #f2f2f2;
+          margin: 5px 0;
+          padding: 10px;
+          border-radius: 5px;
         }
       `}</style>
     </main>

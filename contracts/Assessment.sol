@@ -47,23 +47,26 @@ contract Assessment {
     }
 
     // custom error
-    error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
+   revert InsufficientBalance({
+    balance: balance,
+    withdrawAmount: _withdrawAmount
+}) with message("Insufficient balance for withdrawal");
 
-    function withdraw(uint256 _withdrawAmount) public {
-        require(msg.sender == owner, "You are not the owner of this account");
+function withdraw(uint256 _withdrawAmount) public {
+    require(msg.sender == owner, "You are not the owner of this account");
 
-        // ensure sufficient balance
-        if (balance < _withdrawAmount) {
-            revert InsufficientBalance({
-                balance: balance,
-                withdrawAmount: _withdrawAmount
-            });
-        }
-
-        // perform transaction
-        balance -= _withdrawAmount;
-
-        // emit the event
-        emit Withdraw(msg.sender, _withdrawAmount);
+    // ensure sufficient balance
+    if (balance < _withdrawAmount) {
+        revert InsufficientBalance({
+            balance: balance,
+            withdrawAmount: _withdrawAmount
+        });
     }
+
+    // perform transaction
+    balance -= _withdrawAmount;
+
+    // emit the event
+    emit Withdraw(msg.sender, _withdrawAmount);
 }
+
